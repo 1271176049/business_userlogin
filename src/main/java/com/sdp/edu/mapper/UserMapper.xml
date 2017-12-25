@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sdp.edu.mapper.UserMapper">
+	<select id="select_user_by_string" resultType="com.sdp.edu.bean.T_MALL_USER_ACCOUNT">
+		select * from
+		t_mall_user_account where
+		yh_mch=#{param1} and yh_mm=#{param2}
+	</select>
+	<select id="select_user_by_bean" resultType="com.sdp.edu.bean.T_MALL_USER_ACCOUNT">
+		select * from
+		t_mall_user_account where yh_mch=#{yh_mch} and yh_mm=#{yh_mm}
+	</select>
+</mapper>

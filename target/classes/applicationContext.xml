@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/jdbc 
+       http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+               http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+                http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        
+        http://cxf.apache.org/jaxws
+        http://cxf.apache.org/schemas/jaxws.xsd
+                http://cxf.apache.org/jaxrs
+        http://cxf.apache.org/schemas/jaxrs.xsd
+       ">
+	<!-- 引入外部属性文件 -->
+	<context:property-placeholder location="classpath:db.properties" />
+	<!-- 配置数据源 -->
+	<bean id="datasource1" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="${jdbc.driver}"></property>
+		<property name="url" value="${jdbc.url_1}"></property>
+		<property name="username" value="${jdbc.user}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+	</bean>
+	<bean id="datasource2" class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName" value="${jdbc.driver}"></property>
+		<property name="url" value="${jdbc.url_2}"></property>
+		<property name="username" value="${jdbc.user}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+	</bean>
+	<!-- 配置多数据源切换的自定义类,该类继承自AbstractRoutingDataSource -->
+	<bean id="dataSource" class="com.sdp.edu.utils.MyRoutingDataSource">
+		<!-- 配置目标数据源 -->
+		<property name="targetDataSources">
+			<map key-type="java.lang.String">
+				<entry key="d1" value-ref="datasource1"></entry>
+				<entry key="d2" value-ref="datasource2"></entry>
+			</map>
+		</property>
+		<!-- 默认使用dataSource1 -->
+		<property name="defaultTargetDataSource" ref="datasource1"></property>
+	</bean>
+	<!-- 配置SqlSessionFactoryBean:配置数据源、配置mybaties配置文件mytables-config.xml -->
+	<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+	</bean>
+	<!--配置mybaties映射文件扫描 -->
+	<bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.sdp.edu.mapper"></property>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactoryBean"></property>
+	</bean>
+
+	<!-- 配置soap风格的webservice的发布web端点 -->
+	<jaxws:endpoint address="/login_ws"
+		implementorClass="com.sdp.edu.server.UserLoginServer">
+		<jaxws:implementor>
+			<bean class="com.sdp.edu.server.UserLoginServerImp"></bean>
+		</jaxws:implementor>
+	</jaxws:endpoint>
+	<!-- 配置rest风格的web端点 -->
+	<jaxrs:server address="/login_rs">
+		<jaxrs:serviceBeans>
+			<bean class="com.sdp.edu.server.UserLoginServerImp_rs"></bean>
+		</jaxrs:serviceBeans>
+	</jaxrs:server>
+</beans>
